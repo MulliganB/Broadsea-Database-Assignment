@@ -1,0 +1,124 @@
+--Tables 
+
+drop table "B2021501"."BBT_DESTINATION" cascade constraints PURGE;
+drop table "B2021501"."BBT_LICENSEE" cascade constraints PURGE;
+drop table "B2021501"."BBT_LICENCED_VEHICLE" cascade constraints PURGE;
+drop table "B2021501"."BBT_VEHICLE" cascade constraints PURGE;
+drop table "B2021501"."BBT_SCHEDULE" cascade constraints PURGE;
+drop table "B2021501"."BBT_SERVICE_STOPS" cascade constraints PURGE;
+drop table "B2021501"."BBT_FREQUENCY" cascade constraints PURGE;
+
+
+create table BBT_Destination
+(
+DestId number(10) primary key,
+Names varchar2(100) not null,
+PlaceType varchar2(100) not null,
+xCoordinate number(4),
+yCoordinate number(4),
+Location_Description varchar2(100) default 'N/A',
+Opening varchar2(100) default 'N/A',
+AddressLine1 varchar2(100) default 'N/A',
+AddressLine2 varchar2(100) default 'N/A',
+AddressLine3 varchar2(100) default 'N/A',
+AddressLine4 varchar2(100) default 'N/A',
+Postcode varchar2(10) default 'N/A',
+Phone varchar2(20),
+Email  varchar2(100) default 'N/A',
+StopName varchar2(100) default 'N/A',
+LocatedOn varchar2(100) default 'N/A',
+Operators varchar2(20) default 'N/A',
+RankNo number(5) default 0,
+Rating VARCHAR2(15) default 'Not Rated',
+RouteNo varchar2(50) default 'N/A',
+Direction varchar2(10)
+);
+
+create table BBT_Licensee
+(
+LicenseNo number(20) primary key,
+Names varchar2(50) not null,
+DestId number(10) not null,
+foreign key (DestId) references BBT_Destination(DestId),
+ValidFrom date not null,
+ExpiryDate date not null,
+LicenseType varchar2(25) not null
+);
+
+create table BBT_Licenced_Vehicle
+(
+LicenseNo number(15),
+primary key(LicenseNo, Reference1),
+Registration varchar2(10) unique,
+Reference1 varchar2(50) unique
+);
+
+create table BBT_Vehicle
+(
+Registration varchar2(10) primary key,
+Capacity number(2),
+VehicleType varchar2(100) not null,
+Models varchar2(100) not null,
+Reference1 varchar2(50) unique,
+TimeOn  VARCHAR2(20) not null,
+TimeOff VARCHAR2(20) not null,
+HomeRank varchar2(50) not null,
+OPERATOR varchar2(100) not null
+);
+
+alter table BBT_Licenced_Vehicle 
+add constraint fk_license foreign key (LicenseNo) references BBT_Licensee(LicenseNo);
+
+alter table BBT_Licenced_Vehicle 
+add constraint fk_Registration foreign key (Registration) references BBT_Vehicle(Registration);
+
+--add fk to desination of operators
+create table BBT_Schedule
+(
+ScheduleNo number(10),
+RouteNo varchar2(50),
+Operators varchar2(20),
+primary key(ScheduleNo, RouteNo),
+Days Varchar2(10),
+Type1 varchar2(10),
+startDate  date not null,
+EndDate  date not null,
+ExpiryDate date not null,
+OperatorLicenseNo number(15),
+DestId number(10),
+BaseFare varchar2(25) not null,
+FarePerStop varchar2(20) not null,
+foreign key (DestId) references BBT_Destination(DestId)
+);
+
+ 
+create table BBT_Service_Stops
+(
+StopReference number(10),
+RouteNo varchar2(50),
+Direction varchar2(10),
+primary key(StopReference, RouteNo, Direction),
+JourneyTime number(4),
+StopName varchar2(50),
+StopSeqNo number(6),
+RoutingName Varchar2(50)
+);
+
+alter table BBT_Destination 
+add constraint FK_StopReference foreign key (DESTID, RouteNo, Direction) references BBT_Service_Stops(StopReference, RouteNo, Direction);
+/*
+alter table BBT_Destination 
+add constraint FK_Operator foreign key (Operators) references BBT_Schedule(Operators);
+*/
+CREATE TABLE BBT_Frequency
+(
+Route VARCHAR2(50),
+Days  VARCHAR2(10),
+primary key (Route, Days),
+Frequency NUMBER(6) not null,
+Starts VARCHAR2(10) not null,
+Ends VARCHAR2(10) not null
+);
+
+alter table BBT_Schedule 
+add constraint fk_Route foreign key (routeno,days) references BBT_Frequency(route,days);
